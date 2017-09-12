@@ -4,5 +4,4 @@ This is my blog.
 ** September
 *** 12
     <2017-09-12 Tue>
-
-    [[Post][./reproducible-resume]]
+    [[./reproducible-resume][./reproducible-resume]]
