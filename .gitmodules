@@ -1,0 +1,3 @@
+[submodule "reproducible-resume"]
+	path = reproducible-resume
+	url = https://github.com/matthewbauer/resume
