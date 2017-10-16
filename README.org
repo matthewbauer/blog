@@ -1,7 +1,0 @@
-This is my blog.
-
-* 2017
-** September
-*** 12
-    <2017-09-12 Tue>
-    [[./reproducible-resume][./reproducible-resume]]

@@ -1,0 +1,200 @@
+#+title: Nix and Org
+#+author: Matthew Bauer
+#+date: <2017-10-15 Sun 23:26>
+
+This is a guide on getting Org to work with Nix. Specifically, I want to show
+how you can write Nix expressions within an Org document. This might not seem
+useful at first, but I think by the end of this guide it will become clear how
+powerful the combination of these tools are. First, some background on what
+these tools are for those unfamiliar.
+
+Org was started in 2003 as an extension, or ‘mode’, to the Emacs text editor.
+Carsten Dominik, frustrated with Emacs builtin outliner, sought to create
+something that he could use to organize all of his notes and projects in a tree
+structure. Since then, Org has grown to include features for note-taking,
+hyperlinking, todo lists, spreadsheets, literate programming, and even exporting
+to HTML and LaTeX (in fact, this blog is composed in Org). It is the *literate
+programming* feature, called /Babel/, that will be used extensively in this
+guide. All of Org’s features are written in extensible Lisp that manipulate
+plain-text ‘.org’ files. Carsten’s creation has become extremely popular among
+Emacs users and since 2007 has been included in Emacs. The easiest way to start
+using Org is to download Emacs directly from [[https://www.gnu.org/software/emacs/][the GNU website]].
+
+Let’s start by creating a new Org file. Once you have Emacs started, you can
+create a new file by pressing =C‑x C‑f=. If you are unfamiliar with this
+notation, that means press and hold the Control key, then press x, then press f.
+Now we can name the new file at the ‘Find file: ’ prompt. Let’s type ‘demo.org’
+here and then press enter. Now we have an empty Org mode file to type into. You
+can save it at any time with =C‑x C‑s=.
+
+#+begin_src org :tangle test.org
+,#+title: Org Demo
+,#+date: <2017-10-15 Sun>
+
+This is just a plain-text document. Keep this document open because we’ll be
+editing this file throughout the tutorial.
+#+end_src
+
+Now that you have an Org file setup, make sure you leave Emacs open and we’ll
+refer back to this file later. Next, some background on Nix.
+
+Nix was started in 2004 as a /purely functional package manager/. It solves many
+problems in traditional package management. For instance, multiple versions of a
+package can be used at the same time, each package gets unique dependencies, bad
+upgrades can be rolled back, and unused packages can be garbage collected. More
+information on Nix is available from the [[https://nixos.org/nix/][Nix homepage]]. Nix can be installed on
+both Linux and macOS machines. It is fairly easy to setup, provided you have
+*sudo* access. Run the following in a terminal to install Nix,
+
+#+begin_src sh :tangle no
+$ curl https://nixos.org/nix/install | sh
+#+end_src
+
+Once Nix has been installed, we can go back to Emacs and start writing to
+=demo.org=. Let’s append some documentation to the Org file on what we’ll be building.
+
+#+begin_src org :tangle test.org
+
+This Org file builds the Nix expression for ‘Hello World’.
+#+end_src
+
+To put source code in our Org file, we’ll need to know some Org syntax. The
+directives =#+begin_src= and =#+end_src= tell Org that we are writing in another
+language. *nix* is the name of the language and =hello.nix= is the file that Org
+will write (tangle) the code to.
+
+#+begin_src org :tangle test.org
+
+,#+begin_src nix :tangle hello.nix
+/* Nix code goes here */
+#+end_src
+
+Finally, we can write in Nix’s expression language to create a Hello World
+package. Nix’s syntax can be confusing to new users so I’ll be as verbose as
+possible. Almost everything is a function in Nix, so, let’s define some
+arguments for a /Hello World/ function. Functions with multiple arguments are
+defined with ={ a, b, c }:= where each argument is a comma separated identifier
+between ={= and =}=. We’ll need =stdenv= (Nix’s standard environment) and
+=fetchurl= (Nix’s function to download a URL) to build Hello World.
+
+#+begin_src org :tangle test.org
+{ stdenv, fetchurl }:
+#+end_src
+
+Next, we need to provide a definition for Hello World. We want to build Hello
+World from some source files. That’s called a derivation in Nix and we can
+accomplish it by calling the =stdenv.mkDerivation= function. The keyword =rec=
+tells Nix that our arguments to =stdenv.mkDerivation= might be recursive,
+meaning our args might need to reference each other.
+
+#+begin_src org :tangle test.org
+stdenv.mkDerivation rec {
+#+end_src
+
+Let’s give this derivation a name.
+
+#+begin_src org :tangle test.org
+  name = "hello-2.10";
+#+end_src
+
+Then provide a source using fetchurl.
+
+#+begin_src org :tangle test.org
+  src = fetchurl {
+    url = "mirror://gnu/hello/${name}.tar.gz";
+    sha256 = "0ssi1wpaf7plaswqqjwigppsg5fyh99vdlb9kzl7c9lng89ndq1i";
+  };
+}
+,#+end_src
+#+end_src
+
+That’s it! We’ve defined a Nix expression that will build Hello World.
+
+Unfortunately, this won’t work on it’s own because Nix doesn’t know what stdenv
+and fetchurl refer to. We’ll need to define another Nix expression to bootstrap
+this one. Since this is all in Org mode that’s as easy as just adding another
+code block. We’ll call it =bootstrap.nix= and it will just call =hello.nix= as a
+package using the =stdenv= and =fetchurl= defined in [[https://nixos.org/nixpkgs/][Nixpkgs]].
+
+#+begin_src org :tangle test.org
+
+,#+begin_src nix :tangle bootstrap.nix
+{ nixpkgs ? <nixpkgs> }:
+
+with import nixpkgs {};
+
+callPackage ./hello.nix {}
+,#+end_src
+#+end_src
+
+Let’s see if this works. Type =M‑x= (which means hold down the meta key and
+press x) and then type =org‑babel‑tangle‑file= followed by enter. After this was
+run, you’ll have a file called =hello.nix= and a file called =bootstrap.nix= in
+the current directory. Open up a terminal and we can build Hello World.
+
+#+begin_src sh :tangle no
+$ nix-build
+/nix/store/…-hello-2.10
+$ ./result/bin/hello
+Hello World!
+#+end_src
+
+This is pretty useful on its own, but I don’t want to have to /tangle/ the file
+each time I make a change. Let’s tangle Org within a Nix expression. Is this
+possible in Nix?
+
+Recently Nix has added a feature called IFD which stands for *Import From
+Derivation*. It allows us to use generated Nix expressions within another Nix
+expression. That way we can derive hello.nix from a Nix expression and then
+derive hello.nix, avoiding =org‑babel‑tangle‑file= completely.
+
+To do this, we’ll need to create another Nix file that we’ll call =default.nix=.
+Like the boostraper, I won’t break down exactly what’s going on in this post,
+but it follows the basic Import From Derivation process outlined above calling
+Org’s tangler.
+
+#+begin_src org :tangle test.org
+
+,#+begin_src nix :tangle default.nix
+{ nixpkgs ? <nixpkgs> }:
+
+with import nixpkgs {};
+
+import (runCommand "bootstrap.nix-generated" {
+  buildInputs = [ emacs ];
+} ''
+    mkdir -p $out
+    cd $out
+    cp ${./test.org} test.org
+    emacs --batch -l ob-tangle --eval "(org-babel-tangle-file \"test.org\")"
+    cp bootstrap.nix default.nix
+  ''
+) { inherit nixpkgs; }
+,#+end_src
+#+end_src
+
+We still need to tangle everything one last time. Type =M‑x= and then type
+=org‑babel‑tangle‑file= followed by enter. A new =default.nix= file will appear.
+That =default.nix= file along with =test.org= is all you need to build this
+expression. To verify this, let’s first remove those old files so we know they
+aren’t being referenced accidentally.
+
+#+begin_src sh :tangle no
+$ rm -f hello.nix bootstrap.nix
+#+end_src
+
+Finally, we can build our /Hello World/ expression!
+
+#+begin_src sh :tangle no
+$ nix-build
+/nix/store/…-hello-2.10
+$ ./result/bin/hello
+Hello World!
+#+end_src
+
+In this guide I’ve shown you an easy way to write Nix expressions in Org. Now
+that you have this environment setup, you should try hacking around =test.org=.
+You can always run =nix‑build= to see if a binary builds. Try using other
+sources, creating a new derivation, adding other dependencies, or hack something
+else up. I recommend reading through [[https://nixos.org/nixos/nix-pills/][the Nix Pills series]] for learning Nix and
+[[http://orgmode.org/guide/][the Org Mode Guide]] for learning Org.
