@@ -1,0 +1,129 @@
+#+TITLE: Announcing Omnix
+#+AUTHOR: Matthew Bauer
+#+DATE: <2017-10-20 Fri>
+
+I’ve started a new project that I’m calling Omnix. I don’t want to oversell it
+but I think it’s a really cool project.
+
+Omnix is based on the Nix package manager and you need to have Nix installed for
+it to work. To install Nix follow the instructions on [[https://nixos.org/nix/][the Nix homepage]].
+
+* What does it do?
+
+Omnix allows you to have every app available at your finger tips without
+actually installing every app. It allows you to download apps when you need them
+or just run them when they’re already downloaded. No true installation is
+required, everything is provided just-in-time. This works because Nix’s
+functional model mean that new software can be added with zero side-effects. If
+you run out of space on your computer, just use Nix’s garbage collector!
+
+* How can I install it?
+
+Make sure you have Nix installed by running:
+
+#+BEGIN_SRC shell
+curl https://nixos.org/nix/install | sh
+#+END_SRC
+
+Now we can actually setup Omnix. 
+
+Unfortunately, it’s fairly time intensive. First let’s clone the Git repo.
+
+#+BEGIN_SRC shell
+cd ~
+git clone https://github.com/matthewbauer/omnix
+cd omnix
+#+END_SRC
+
+Now install the Omnix drv:
+
+#+BEGIN_SRC shell
+nix-env -if.
+#+END_SRC
+
+* How does it work?
+
+Omnix is a kind of /lazy/ app store. That’s lazy in the functional programming
+sense where values aren’t evaluated until their needed. With Omnix, packages
+aren’t downloaded until their invoked.
+
+Omnix can create three different types of wrappers:
+
+- =/bin/*=: This is where all of the basic commands are put. Running one of
+  these wrapper will download that command and execute it for you.
+- =/Applications/*.app=: These are macOS skeleton bundles that you can open
+  through Finder.app like any other software. To save space, only a few
+  essential parts of the .app folder have been kept.
+- =/share/applications=: This is the Freedesktop Linux spec. Each of these apps
+  are identical to the ones found in each pakage.
+
+Invoking any of these wrapper may take time dependening on how many and how big
+of packages are needed.
+
+Here’s what a wrapper looks like internally:
+
+#+BEGIN_SRC shell
+#!/nix/store/…-bash-4.4-p12/bin/sh
+/nix/store/…-omnix/share/omnix/omnix.sh \
+  /nix/store/…-nixexprs.tar.xz qt4.out \
+  Applications/Assistant.app/Contents/MacOS/Assistant '%s %s' $@
+#+END_SRC
+
+=omnix.sh= is the ensurer script that will fetch the =qt4.out= for you.
+Arg 1 keeps a reference to Nixpkgs so we can make sure we get the right
+attribute. Arg 2 is the Nixpkgs attribute. Arg 3 is the path to the binary
+within Nixpkgs and arg 4 is how to execute the command.
+
+=omnix.sh= is a pretty straightforward script that just build the Nixpkgs
+attribute and then runs it:
+
+#+BEGIN_SRC shell
+#!/bin/sh
+
+if [ $# -lt 4 ]; then
+    cat <<EOF >&2
+This is a wrapper script for Omnix that is not mean to be run on its own.
+Please see Omnix documentation for more info.
+EOF
+    exit 1
+fi
+
+if [ -z "$OMNIX_AUTO_INSTALL" ]; then
+    OMNIX_AUTO_INSTALL=0
+fi
+
+nixpkgs="$1"; shift
+attr="$1"; shift
+path="$1"; shift
+cmd="$1"; shift
+
+expr="(import $nixpkgs {}).$attr"
+drv=$(nix-instantiate --no-gc-warning -E "$expr")
+
+if [ -z "$drv" ]; then
+    cat <<EOF >&2
+Nix cannot evaluate $expr.
+EOF
+    exit 1
+fi
+
+out=$(nix-store --no-gc-warning -r "$drv" | head -1)
+
+if ! [ -d "$out" ]; then
+    cat <<EOF >&2
+Nix cannot build $attr.
+EOF
+    exit 1
+fi
+
+$(printf "$cmd" "$out/$path" "$@")
+
+if [ "$OMNIX_AUTO_INSTALL" -eq 1 ]; then
+    nix-env -i "$out"
+fi
+#+END_SRC
+
+* Contact
+
+Tell me what you think about this project! There are many improvements to be
+made.
