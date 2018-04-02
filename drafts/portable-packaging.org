@@ -1,0 +1,106 @@
+#+title: Portable Packaging in Nix
+#+author: Matthew Bauer
+#+date: <2018-03-28 Wed>
+
+One of the goals of Nixpkgs is to ensure that packages are portable.
+This means that when a package builds on an Intel64 Linux machine
+should be buildable on Intel32 Linux, ARM Linux, and even macOS
+machines (in fact, any machine should work, provided a valid standard
+environment). Issues in various packages come up to make this
+difficult but we try to make things as consistent as possible. This is
+in sharp contrast to macOS-specific package managers like
+Homebrew[fn:1] and almost all Linux package managers.
+
+Like most Linux distributions, NixOS uses GNU software for much of its
+userland. This tradition of GNU/Linux[fn:2] means that most Linux
+software will only build with GNU tools.
+
+Let’s look at the packages guaranteed to be in a standard environment
+within Nixpkgs. These are some of the few packages that you can assume
+exist in Nixpkgs without listing them explicitly. Because these
+“common paths” are required to bootstrap the standard environment
+completely, we can safely assume that they will always be available in
+Nixpkgs.
+
+| Name       | Nix attribute | Maintainer | Tools         | Created by                  | Date |
+|------------+---------------+------------+---------------+-----------------------------+------|
+| Unix shell | bash          | GNU        | sh            | Thompson                    | 1971 |
+| coreutils  | coreutils     | GNU        | cat, cp, etc. | Thompson                    | 1971 |
+| findutils  | findutils     | GNU        | find, xargs   | Haight                      | 1974 |
+| diffutils  | diffutils     | GNU        | diff          | McIlroy                     | 1974 |
+| tar        | gnutar        | GNU        | tar           | Fenlason                    | 1990 |
+| gzip       | gzip          | GNU        | gzip          | Gailly & Adler              | 1992 |
+| bzip2      | bzip2         | Seward     | bzip2         | Seward                      | 1996 |
+| xz         | xz            | Tukaani    | xz            | Collin                      | 2005 |
+| sed        | gnused        | GNU        | sed           | McMahon                     | 1974 |
+| grep       | gnugrep       | GNU        | grep          | Thompson                    | 1974 |
+| patch      | gnupatch      | GNU        | patch         | Wall                        | 1985 |
+| awk        | gawk          | GNU        | awk           | Aho, Weinberger & Kernighan | 1977 |
+| make       | gnumake       | GNU        | make          | Feldman                     | 1976 |
+
+The tools in the standard environment have a long history dating back
+to the original version of Unix (1975)[fn:3]. While Nix 
+
+| Package              | Linux & Hurd | BSDs         | Darwin (macOS)    | MinGW (Windows) |   |
+|----------------------+--------------+--------------+-------------------+-----------------+---|
+| C Compiler           | GCC (GNU)    | Clang (LLVM) | Clang (LLVM)      | Visual Studio   |   |
+| Standard C Library   | Glibc (GNU)  | libc ()      | libSystem (Apple) | MSVCRT          |   |
+| Standard C++ Library | libstdc++    | libstdc++    | libc++            | MSVCP           |   |
+
+Traditionally, the GNU project’s Glibc has been assumed in NixOS.
+Glibc provides us with a standard C library, but is very closely
+coupled with Linux. In fact, Glibc will not run on macOS at all. Many
+incompatibilities will naturally exist between libSystem and Glibc.
+For instance, both Glibc and libSystem provides a number of built-in
+“bonus libraries” that are always available.
+
+| Library    | Glibc | libSystem | musl | MSVCRT | BSD libc | Bionic | Newlib |
+|------------+-------+-----------+------+--------+----------+--------+--------|
+| libm       | [X]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libiconv   | [X]   | [ ]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libintl    | [X]   | [ ]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libpthread | [X]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libinfo    | [ ]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libcurses  | [ ]   | [ ]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libresolv  | [X]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| librt      | [X]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libcrypt   | [ ]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libxnet    | [X]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libdl      | [ ]   | [ ]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+| libutil    | [ ]   | [X]       | [?]  | [?]    | [?]      | [?]    | [?]    |
+
+This presents a challenge to 
+
+** FAQs
+*** What to do when a package really does need GCC?
+
+    Not all packages are portable. In these cases we have a way to
+    ensure that GCC is used as the compiler. For example, the tool
+    "masscan" will only build with GCC.
+
+    #+begin_src nix
+    masscan = callPackage ../tools/security/masscan {
+      stdenv = gccStdenv;
+    };
+    #+end_src
+
+    gccStdenv will ensure that our standard environment uses GCC
+    instead of the default (which will depend on what platform you
+    use). Likewise if you’re package requires Clang to build, you can
+    do the same.
+
+    #+begin_src nix
+    afl = callPackage ../tools/security/afl {
+      stdenv = clangStdenv;
+    };
+    #+end_src
+
+*** What to do when a package needs true util-linux
+
+    
+
+[fn:1] LinuxBrew is available for Linux systems, but it is technically
+a fork of Homebrew.
+[fn:2] While rms insists we always call it GNU/Linux, in Nixpkgs, at
+least in theory we can build a Linux 
+[fn:3] You will find a few notable additions 

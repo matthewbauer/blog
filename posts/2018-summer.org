@@ -1,0 +1,7 @@
+#+title: 2018 Summer
+#+author: Matthew Bauer <mjbauer95@gmail.com>
+#+date: <2018-03-31 Sat>
+
+Quick post to annouce summer plans. I have accepted a summer
+internship position at [[https://obsidian.systems][Obsidian Systems]] in [[https://en.wikipedia.org/wiki/New_York_City][the greatest city in the
+world]]. Very excited to be working with a team of really smart people.

@@ -19,6 +19,8 @@
 #+EXPORT_FILE_NAME: index
 #+date: <2017-11-06 Mon>
 
+*Note: the updated version of this is available at https://matthewbauer.us/bauer/*
+
 I’m publishing my IDE as a blog post. It’s all written in Org Babel.
 
 This file generates an Emacs configuration. It can be considered an ‘[[https://www.gnu.org/s/emacs/][Emacs]]+[[https://nixos.org][Nix]]’

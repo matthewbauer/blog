@@ -1,0 +1,28 @@
+#+TITLE: nix-buffer: nix-shell in Emacs
+#+AUTHOR: Matthew Bauer
+#+EMAIL: mjbauer95@gmail.com
+#+DATE: <2018-02-11 Sun>
+
+Shea Levy has a wonderful package out for users of Nix and Emacs. It’s
+called [[https://github.com/shlevy/nix-buffer][nix-buffer]] and it greatly improves working on Nix stuff in
+Emacs. To try it just get it from MELPA by running =M-x
+package-install<RET>nix-buffer=.
+
+To use it in a project you need to create a new file in your project
+directory called =dir-locals.nix=. It works a lot like
+=.dir-locals.el= but it allows you to evaluate Nix expressions.
+
+To setup, just create =dir-locals.nix= that looks like this:
+
+#+BEGIN_SRC nix
+let pkgs = import <nixpkgs> {};
+in with pkgs; nixBufferBuilders.withPackages [ … ]
+#+END_SRC
+
+You can put anything from Nixpkgs inside of =withPackages=. That path
+is added to your exec-path in Emacs. Using this you can wrap your
+project in a container and avoid conflicts between project configurations!
+
+There’s lot of future extensions for this. Ideally we could skip and
+the =dir-locals.nix= configuration and automatically detect what
+dependencies you need based on your =default.nix= file.

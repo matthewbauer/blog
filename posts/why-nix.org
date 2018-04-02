@@ -1,0 +1,56 @@
+#+TITLE: Why Nix?
+#+AUTHOR: Matthew Bauer <mjbauer95@gmail.com>
+#+DATE: <2017-11-21 Tue>
+
+*THIS IS A WORK IN PROGRESS ESSAY*
+
+To someone new to it, Nix may not stand out as a package manager. We’re all used
+to how the average package manager works. You expect it to be able to install
+and uninstall apps and services and then mostly get out of the way. With that in
+mind, you look for ease-of-use, community support, and number of packages in
+your package manager. These are all important in any package manager and Nix
+compares well in some of these metrics[fn:1]. But just looking at this, you’ll
+miss what makes Nix useful.
+
+Nix isn’t just a package manager. It’s a functional programming language that
+just happens to also be a really good package manager. At first, it might not
+make sense to have a programming language just for your package manager. The Nix
+model of package management takes some getting used to.
+
+Packages are represented in Nix as a special data type called a derivation. The
+name *derivation* comes from the idea that each package is /derived/ from some
+inputs like source code, libraries, and build tools[fn:2]. Each derivation has
+its own directory, unique to every unique derivation written in code.
+
+Together, these ideas make Nix really useful. To demonstrate its usefulness,
+I’ve outlined three points where Nix is much better than an ordinary package
+manager. There are many others[fn:3] but these are the ones that I think are
+most convincing.
+
+* TODO Building
+
+Package managers like RPM or Homebrew think of packages as tables.
+
+* TODO Using packages without installing
+
+We are so used to installing software to use it. The Nix model gives you 
+
+* TODO Rollbacks
+
+* Comments
+
+Thanks for reading! I’ve been trying to improve my writing skills. This blog
+post is part of that effort. Feedback on this is welcome. My email is
+[[mailto:mjbauer95@gmail.com][mjbauer95@gmail.com]].
+
+* Footnotes
+
+[fn:1] 
+Not all, but we’re improving every day. Usability is still a major issue.
+
+[fn:2]
+
+[fn:3]
+For more features of Nix, you can checkout the [[https://nixos.org/nix/][Nix website]].
+
+[fn:4]
