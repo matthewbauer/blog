@@ -1,0 +1,283 @@
+#+TITLE: Channel Changing with Nix
+#+SUBTITLE: Back to the future
+#+AUTHOR: Matthew Bauer
+#+EMAIL: mjbauer95@gmail.com
+#+DATE: <2018-05-13 Sun>
+#+HTML_HEAD: <link rel=stylesheet href="https://matthewbauer.us/style.css" />
+
+* Introduction to channels
+
+One of the many underappreciated feature of Nix is its ability to
+travel back in time. Functional dependencies mean that you can easily
+pull in old releases of NixOS and Nixpkgs without changing your
+environment at all! It’s surprisingly easy with Nix 2.0 and its
+support for Import From Derivation.
+
+First, I will provide some code to get us started. This Nix script is
+what I use as my “channel changes”. It bootstraps the use of old
+channels. In Nix-world, channels are just what we call the CI-tested
+branch of NixOS/Nixpkgs[fn:1]. The NixOS maintainers have been making
+releases consistently since 2013, so there is a lot of interesting
+history.
+
+* Channel changing
+
+Here is my script that I will refer to later on in the post
+as “channels.nix” (be sure to try it out yourself!)
+
+#+BEGIN_SRC nix :tangle channels.nix
+let mapAttrs = f: set: builtins.listToAttrs (
+      map (attr: { name = attr; value = f set.${attr}; })
+          (builtins.attrNames set));
+    channels = {
+      aardvark = "13.10";
+      baboon = "14.04";
+      caterpillar = "14.12";
+      dingo = "15.09";
+      emu = "16.03";
+      flounder = "16.09";
+      gorilla = "17.03";
+      hummingbird = "17.09";
+      impala = "18.03";
+    };
+in mapAttrs (v:
+     import (builtins.fetchTarball
+             "https://nixos.org/channels/nixos-${v}/nixexprs.tar.xz") {})
+   channels
+#+END_SRC
+
+As you can see from the script there have been 9 releases in total. We
+use a different letter of the alphabet for each release, starting with
+A for Aardvark and we are not up to I for Impala[fn:2].
+
+* ‘nix run’ magic
+
+In my Nix script, I have created an “attribute” for each version that
+has been released. With Nix 2.0, it is very easy to run packages from
+them. Here is the command to run =hello= world from Hummingbird.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix hummingbird.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: Hello, world!
+
+This has run the =hello= executable from the hummingbird release. Since
+you are most likely not running Hummingbird, it may take a while to
+run the first time. However, once Nix has downloaded the needed files
+future execution will be instantaneous. The package is complete
+self-contained! For now, we will just use Impala (18.03) so that
+things go a little faster.
+
+There are lots of packages in Nixpkgs so we don’t have to restrict
+ourselves to just hello. Let’s try out cowsay first.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix impala.cowsay -c cowsay hello
+#+END_SRC
+
+#+RESULTS:
+:  _______ 
+: < hello >
+:  ------- 
+:         \   ^__^
+:          \  (oo)\_______
+:             (__)\       )\/\
+:                 ||----w |
+:                 ||     ||
+
+There are many, many more of these commands. I’ve included a few below
+for you to try out on your own.
+
+#+BEGIN_SRC sh :results output :exports code :eval never-export
+nix run -f channels.nix impala.curl -c curl wttr.in/seville
+nix run -f channels.nix impala.youtube-dl -c \
+    youtube-dl -t --extract-audio \
+    --audio-format mp3 https://www.youtube.com/watch?v=dQw4w9WgXcQ
+nix run -f channels.nix impala.telnet -c telnet towel.blinkenlights.nl 666
+nix run -f channels.nix impala.sox -c bash -c \
+    'for n in E2 A2 D3 G3 B3 E4; do play -n synth 4 pluck $n repeat 2; done'
+nix run -f channels.nix impala.nethack -c nethack
+nix run -f channels.nix impala.fortune -c fortune
+#+END_SRC
+
+* The macOS+Nix odyssey
+
+The fact that Nix works so well on macOS is a miracle in its own
+right. Apple has a proprietary ABI but Nix is intended to be used with
+free software. To get around this, many hacks are necessary including
+taking Apple’s standard C library[fn:3]. Anyway, I was interested in how
+well the binaries produced by Nixpkgs hold up on my MacBook. For
+reference, here are the versions of macOS available when each release
+happened. Those familiar with macOS internals will remember some
+significant differences between these versions.
+
+| NixOS release       | macOS release        |
+|---------------------+----------------------|
+| Aardvark (13.10)    | Mountain Lion (10.8) |
+| Baboon (14.04)      | Mavericks (10.9)     |
+| Caterpillar (14.12) | Yosemite (10.10)     |
+| Dingo (15.09)       | Yosemite (10.10)     |
+| Emu (16.03)         | El Capitan (10.11)   |
+| Flounder (16.09)    | El Capitan (10.11)   |
+| Gorilla (17.03)     | Sierra (10.12)       |
+| Hummingbird (17.09) | High Sierra (10.13)  |
+| Impala (18.03)      | High Sierra (10.13)  |
+
+So, my MacBook is running the latest macOS 10.13. Naturally we can
+test that Impala & Hummingbird will work correctly. =hello= is a good
+tester, of course, not comprehensive.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix impala.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: Hello, world!
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix hummingbird.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: Hello, world!
+
+But now let’s test Gorilla. It was released when macOS Sierra was
+still around but the ABI should be compatible.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix gorilla.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: dyld: Library not loaded: /usr/lib/system/libsystem_coretls.dylib
+:  Referenced from: /nix/store/v7i520r9c2p8z6vk26n53hfrxgqn8cl9-Libsystem-osx-10.11.6/lib/libSystem.B.dylib
+:  Reason: image not found
+: sh: line 1: 23628 Abort trap: 6           nix run -f channels.nix gorilla.hello -c hello
+
+Oh no!
+
+We can see that libSystem 10.11 has been downloaded for us[fn:4].
+However, libSystem is referring to an image that isn’t on our machine.
+=libsystem_coretls.dylib= must have existed in 10.11 macOS but been
+removed since then[fn:5].
+
+At this point, it may look like Nixpkgs will be broken going
+backwards. But, I want to try Flounder just to see what happens.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix flounder.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: Hello, world!
+
+Amazingly, it worked! I am still not sure what the differences are,
+but it seems that the older executable is still available. Let’s try
+out Emu to see what happens there.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix emu.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: builder for '/nix/store/s41jnb4kmxxbwj40c5l88k9ma0mwfy0b-hello-2.10.drv' failed due to signal 4 (Illegal instruction: 4)
+: error: build of '/nix/store/s41jnb4kmxxbwj40c5l88k9ma0mwfy0b-hello-2.10.drv' failed
+
+Wow! Again we hit an issue. This is the infamouse =Illegal
+instruction: 4= bug that is frequently hit in Nixpkgs[fn:6]. It occurs
+when an executable uses instructions that have been blocked by the XNU
+kernel. This is usually because they are considered insecure and will
+require a patche to fix. We no longer support Emu, so this is probably
+the end of the line. Let’s try Dingo out just to be sure though.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix dingo.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: builder for '/nix/store/1cyagihl211vsis9bz09cqaz3h2yyc23-libxml2-2.9.3.drv' failed with exit code 77; last 10 log lines:
+:  checking for awk... awk
+:  checking whether make sets $(MAKE)... yes
+:  checking whether make supports nested variables... yes
+:  checking whether make supports nested variables... (cached) yes
+:  checking for gcc... gcc
+:  checking whether the C compiler works... no
+:  configure: error: in `/private/tmp/nix-build-libxml2-2.9.3.drv-0/libxml2-2.9.3':
+:  configure: error: C compiler cannot create executables
+:  See `config.log' for more details
+:  
+: cannot build derivation '/nix/store/jd4y5aps1z61jqbhsz1gy408zwwa49w4-clang-3.6.2.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/n4q29z97dc1p9mqrn2ydhlfmsqwbgx0j-libarchive-3.1.2.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/vh2bh7gaw2m0rgxscf3mhm1d3rz3xwfg-clang-wrapper-3.6.2.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/zg90kfmf99h03z0fl03gw3gh105mb02c-cmake-3.3.1.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/45ndaky3079nd78042384f8hbidq7f7q-libc++abi-3.6.2.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/mmyz6rrddfahwl23i9d9vjh7wa8irp5k-stdenv-darwin-boot-3.drv': 1 dependencies couldn't be built
+: cannot build derivation '/nix/store/lqjabx84kndk75y8m0lq7zh5190k6zzz-hello-2.10.drv': 1 dependencies couldn't be built
+: error: build of '/nix/store/lqjabx84kndk75y8m0lq7zh5190k6zzz-hello-2.10.drv' failed
+
+This is a curious error because it is very different from the previous
+one. Back here we are still using Clang and it looks like
+bootstrapping is failing. I was not using Nix at this time (late
+2015), so I will have to defer to someone who remembers that time
+better. Let’s keep going.
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix caterpillar.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: error: attribute 'hello' in selection path 'caterpillar.hello' not found
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix baboon.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: error: attribute 'hello' in selection path 'baboon.hello' not found
+
+#+BEGIN_SRC sh :results output :exports both :eval never-export
+nix run -f channels.nix aardvark.hello -c hello
+#+END_SRC
+
+#+RESULTS:
+: error: attribute 'hello' in selection path 'aardvark.hello' not found
+
+I’ve grouped them together because they have the same output. It
+appears that =hello= was not available back then! I’m not sure what is
+going on. Again, I will defer to someone else to explain why this
+happens. But, I know for a fact that GNU Hello is one of the first
+packages to be packaged in the Nix language[fn:7].
+
+* Conclusion
+
+I wanted to also look at what happens on Linux when you go back
+through channels. I don’t have time currently so I am just including
+what I have. Anyway, if you are able to report back what happens on
+Linux when running these old channels, it would certainly be
+interesting.
+
+My main goal was to just share some useful things in Nix that I don’t
+think many people outside of the core Nix community know about.
+Documentation has gotten better recently but lots of times people like
+to just read blog posts like this. Hopefully you got a feel for what
+can be done in Nix.
+
+[fn:1] The difference between NixOS & Nixpkgs can sometimes cause
+confusion especially because they are hosted in the same repository.
+We usually refer to NixOS for the Linux-specific distro and to Nixpkgs
+for the cross-platform set of packages. Here I am referring to them
+collectively.
+[fn:2] The in-development version of NixOS/Nixpkgs will be a J for
+Jackelope.
+[fn:3] Apple’s C standard library is called libSystem. Note that
+unlike Glibc & Musl it contains much, much more than what is needed to
+compile simple C programs.
+[fn:4] Note that the same libSystem is used for all of Nixpkgs to
+peliminate having to do SDK detection. Eventually we will update this
+to 10.12 or 10.13 but we prefer to stay a couple releases behind.
+[fn:5] This is not a complete explanation, but the best I can do for
+those not aware of the internals of Nixpkgs.
+[fn:6] See GitHub issue [[https://github.com/NixOS/nixpkgs/issues/17372][#17372]].
+[fn:7] See release [[https://github.com/NixOS/nixpkgs/tree/0.5][0.5]].
