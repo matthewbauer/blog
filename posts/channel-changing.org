@@ -9,12 +9,12 @@
 
 One of the many underappreciated feature of Nix is its ability to
 travel back in time. Functional dependencies mean that you can easily
-pull in old releases of NixOS and Nixpkgs without changing your
-environment at all! It’s surprisingly easy with Nix 2.0 and its
+pull in old releases of NixOS & Nixpkgs without changing your
+environment at all! It’s surprisingly easy in Nix 2.0 with its
 support for Import From Derivation.
 
 First, I will provide some code to get us started. This Nix script is
-what I use as my “channel changes”. It bootstraps the use of old
+what I use as my “channel changer”. It bootstraps the use of old
 channels. In Nix-world, channels are just what we call the CI-tested
 branch of NixOS/Nixpkgs[fn:1]. The NixOS maintainers have been making
 releases consistently since 2013, so there is a lot of interesting
@@ -48,7 +48,10 @@ in mapAttrs (v:
 
 As you can see from the script there have been 9 releases in total. We
 use a different letter of the alphabet for each release, starting with
-A for Aardvark and we are not up to I for Impala[fn:2].
+A for Aardvark. We are now up to I for Impala[fn:2]. New releases
+happen every 6 months starting with Aardvark which was released in
+December 2013. The releases are versioned as =YY.MM= which is common
+practice for Linux distros.
 
 * ‘nix run’ magic
 
@@ -188,9 +191,10 @@ nix run -f channels.nix emu.hello -c hello
 Wow! Again we hit an issue. This is the infamouse =Illegal
 instruction: 4= bug that is frequently hit in Nixpkgs[fn:6]. It occurs
 when an executable uses instructions that have been blocked by the XNU
-kernel. This is usually because they are considered insecure and will
-require a patche to fix. We no longer support Emu, so this is probably
-the end of the line. Let’s try Dingo out just to be sure though.
+kernel. This is usually because they are considered insecure so a
+patch is needed to fix it. We no longer support Emu, so this is
+probably the end of the line. Let’s try Dingo out just to be sure
+though.
 
 #+BEGIN_SRC sh :results output :exports both :eval never-export
 nix run -f channels.nix dingo.hello -c hello
@@ -218,10 +222,10 @@ nix run -f channels.nix dingo.hello -c hello
 : error: build of '/nix/store/lqjabx84kndk75y8m0lq7zh5190k6zzz-hello-2.10.drv' failed
 
 This is a curious error because it is very different from the previous
-one. Back here we are still using Clang and it looks like
-bootstrapping is failing. I was not using Nix at this time (late
-2015), so I will have to defer to someone who remembers that time
-better. Let’s keep going.
+one. Back here we were still using Clang 3.3 & it looks like
+bootstrapping is failing on our newer machines. I was not using Nix at
+this time (late 2015), so I will have to defer to someone who
+remembers that time better. Let’s keep going.
 
 #+BEGIN_SRC sh :results output :exports both :eval never-export
 nix run -f channels.nix caterpillar.hello -c hello
@@ -266,9 +270,9 @@ can be done in Nix.
 
 [fn:1] The difference between NixOS & Nixpkgs can sometimes cause
 confusion especially because they are hosted in the same repository.
-We usually refer to NixOS for the Linux-specific distro and to Nixpkgs
-for the cross-platform set of packages. Here I am referring to them
-collectively.
+We usually refer to NixOS for the Linux-specific distro while Nixpkgs
+refers to the cross-platform set of packages. Here I am referring to
+them collectively.
 [fn:2] The in-development version of NixOS/Nixpkgs will be a J for
 Jackelope.
 [fn:3] Apple’s C standard library is called libSystem. Note that
