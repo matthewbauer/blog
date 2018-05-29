@@ -3,7 +3,6 @@
 #+AUTHOR: Matthew Bauer
 #+EMAIL: mjbauer95@gmail.com
 #+DATE: <2018-05-13 Sun>
-#+HTML_HEAD: <link rel=stylesheet href="https://matthewbauer.us/style.css" />
 
 * Introduction to channels
 
@@ -23,22 +22,22 @@ history.
 * Channel changing
 
 Here is my script that I will refer to later on in the post
-as “channels.nix” (be sure to try it out yourself!)
+as “channels.nix” (be sure to try it out yourself!)[fn:8]
 
 #+BEGIN_SRC nix :tangle channels.nix
 let mapAttrs = f: set: builtins.listToAttrs (
       map (attr: { name = attr; value = f set.${attr}; })
           (builtins.attrNames set));
     channels = {
-      aardvark = "13.10";
-      baboon = "14.04";
+      aardvark    = "13.10";
+      baboon      = "14.04";
       caterpillar = "14.12";
-      dingo = "15.09";
-      emu = "16.03";
-      flounder = "16.09";
-      gorilla = "17.03";
+      dingo       = "15.09";
+      emu         = "16.03";
+      flounder    = "16.09";
+      gorilla     = "17.03";
       hummingbird = "17.09";
-      impala = "18.03";
+      impala      = "18.03";
     };
 in mapAttrs (v:
      import (builtins.fetchTarball
@@ -49,9 +48,9 @@ in mapAttrs (v:
 As you can see from the script there have been 9 releases in total. We
 use a different letter of the alphabet for each release, starting with
 A for Aardvark. We are now up to I for Impala[fn:2]. New releases
-happen every 6 months starting with Aardvark which was released in
-December 2013. The releases are versioned as =YY.MM= which is common
-practice for Linux distros.
+happen every 6 months with Aardvark released in December 2013. The
+releases are versioned as =YY.MM= which is a common practice for Linux
+distros.
 
 * ‘nix run’ magic
 
@@ -66,12 +65,12 @@ nix run -f channels.nix hummingbird.hello -c hello
 #+RESULTS:
 : Hello, world!
 
-This has run the =hello= executable from the hummingbird release. Since
-you are most likely not running Hummingbird, it may take a while to
-run the first time. However, once Nix has downloaded the needed files
-future execution will be instantaneous. The package is complete
-self-contained! For now, we will just use Impala (18.03) so that
-things go a little faster.
+This has run the =hello= executable from the hummingbird release.
+Since you are most likely not running Hummingbird, it may take a while
+to the first time. However, once Nix has downloaded the needed files
+future execution will be instantaneous. The package is completely
+self-contained! To start, we will do examples in Impala (18.03) so
+that things go a little faster.
 
 There are lots of packages in Nixpkgs so we don’t have to restrict
 ourselves to just hello. Let’s try out cowsay first.
@@ -94,14 +93,26 @@ There are many, many more of these commands. I’ve included a few below
 for you to try out on your own.
 
 #+BEGIN_SRC sh :results output :exports code :eval never-export
+# Look up the weather
 nix run -f channels.nix impala.curl -c curl wttr.in/seville
+
+# Download music
 nix run -f channels.nix impala.youtube-dl -c \
     youtube-dl -t --extract-audio \
-    --audio-format mp3 https://www.youtube.com/watch?v=dQw4w9WgXcQ
+    --audio-format mp3 \
+    https://www.youtube.com/watch?v=dQw4w9WgXcQ
+
+# Go see a Star War
 nix run -f channels.nix impala.telnet -c telnet towel.blinkenlights.nl 666
 nix run -f channels.nix impala.sox -c bash -c \
-    'for n in E2 A2 D3 G3 B3 E4; do play -n synth 4 pluck $n repeat 2; done'
+    'for n in E2 A2 D3 G3 B3 E4;
+     do play -n synth 4 pluck $n repeat 2;
+     done'
+
+# Play Nethack
 nix run -f channels.nix impala.nethack -c nethack
+
+# Get your fortune
 nix run -f channels.nix impala.fortune -c fortune
 #+END_SRC
 
@@ -274,7 +285,7 @@ We usually refer to NixOS for the Linux-specific distro while Nixpkgs
 refers to the cross-platform set of packages. Here I am referring to
 them collectively.
 [fn:2] The in-development version of NixOS/Nixpkgs will be a J for
-Jackelope.
+Jackrabbit.
 [fn:3] Apple’s C standard library is called libSystem. Note that
 unlike Glibc & Musl it contains much, much more than what is needed to
 compile simple C programs.
@@ -285,3 +296,6 @@ to 10.12 or 10.13 but we prefer to stay a couple releases behind.
 those not aware of the internals of Nixpkgs.
 [fn:6] See GitHub issue [[https://github.com/NixOS/nixpkgs/issues/17372][#17372]].
 [fn:7] See release [[https://github.com/NixOS/nixpkgs/tree/0.5][0.5]].
+[fn:8] Note that the channel changing script is not necessary. You can
+always refer to the Nixpkgs version directly with the =-f= argument.
+The script is just an easy way to introduce people to the concept.
