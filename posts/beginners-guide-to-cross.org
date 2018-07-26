@@ -73,7 +73,7 @@ $ nix build -f channel:nixos-unstable pkgsCross.raspberryPi.emacs
 #+END_SRC
 
 The built package will be in the same ARM machine code used by the
-Raspbery Pi. The important thing to notice here is that we have the
+Raspberry Pi. The important thing to notice here is that we have the
 power to build in any package in Nixpkgs for any of the platforms
 listed above. Of course, many of these will have issues due to not
 being portable, but with time we can make both Nixpkgs & the free
@@ -127,7 +127,7 @@ Many more combinations are possible, but they all revolve around that
 four-part string config listed. It corresponds to
 =<arch>-<vendor>-<kernel>-<environment>= and is commonly called the
 LLVM triple[fn:5]. The LLVM triple has become the standard way to
-specify systems accross many free software toolchains including GCC,
+specify systems across many free software toolchains including GCC,
 Binutils, Clang, libffi, etc. There is more information that can be
 specified in ~crossSystem~ & ~localSystem~ within Nixpkgs but this is
 not covered here as they are heavily dependent on the specific
@@ -214,5 +214,5 @@ simplification. There are many other types of dependencies but they
 all revolve around the build-time vs runtime distinction.
 [fn:7] See =strictDeps= in [[https://github.com/NixOS/nixpkgs/blob/master/pkgs/stdenv/generic/setup.sh][pkgs/stdenv/generic/setup.sh]].
 [fn:8] Or even worse, they have thought about cross-compilation, but
-embraced many antipatterns that break with Nixpkgs’ cross-compilation
+embraced many anti-patterns that break with Nixpkgs’ cross-compilation
 framework.
