@@ -111,7 +111,7 @@ command line with,
 
 #+BEGIN_SRC sh
 $ nix build -f channel:nixos-unstable \
-      --arg localSystem '{ config = "<arch>-<vendor>-<kernel>-<environment>"; }'
+      --arg crossSystem '{ config = "<arch>-<vendor>-<kernel>-<environment>"; }'
 #+END_SRC
 
 For instance you may want to cross-compile Firefox for ARM64 Linux.
@@ -122,7 +122,7 @@ $ nix build -f channel:nixos-unstable \
       --arg crossSystem '{ config = "arm64-unknown-linux-gnu"; }'
 #+END_SRC
 
-You can be much more specific with what you want through localSystem.
+You can be much more specific with what you want through crossSystem.
 Many more combinations are possible, but they all revolve around that
 four-part string config listed. It corresponds to
 =<arch>-<vendor>-<kernel>-<environment>= and is commonly called the
@@ -189,7 +189,12 @@ The concepts introduced here are also available in the Nixpkgs manual.
 These are the relevant sections/chapters:
 
 - [[https://nixos.org/nixpkgs/manual/#ssec-stdenv-dependencies][Nixpkgs Manual. Section 3.3, Specifying dependencies]]
-- [[https://nixos.org/nixpkgs/manual/#ssec-stdenv-dependencies][Nixpkgs Manual. Chapter 5, Cross compilation]]
+- [[https://nixos.org/nixpkgs/manual/#chap-cross][Nixpkgs Manual. Chapter 5, Cross compilation]]
+
+GNU Automake also has a section on build vs. host vs. target. This
+will help clarify some of the naming conventions in Nixpkgs:
+
+- [[https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html][Automake Manual. Section 2.2.8, Cross-Compilation]]
 
 * Footnotes
 
