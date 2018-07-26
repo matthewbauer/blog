@@ -37,7 +37,7 @@ nix build -f channel:nixos-unstable hello
 #+END_SRC
 
 The rest of the guide will use nixos-unstable as the channel. However,
-one 18.09 is released, you should be able to also use the stable
+once 18.09 is released, you should be able to also use the stable
 channel.
 
 * Building things
@@ -77,7 +77,7 @@ Raspbery Pi. The important thing to notice here is that we have the
 power to build in any package in Nixpkgs for any of the platforms
 listed above. Of course, many of these will have issues due to not
 being portable, but with time we can make both Nixpkgs & the free
-software world better at handling cross compilatino. Any of the
+software world better at handling cross compilation. Any of the
 software listed in ‘nix search’ should be possible to cross compile
 through the pkgsCross attribute.
 
@@ -102,7 +102,7 @@ Some more examples of things that I have worked on,
 
    #+BEGIN_SRC sh
    $ nix build -f channel:nixos-unstable \
-         pkgsCross.aarch64-android-prebuilt.haskell.packages.jq
+         pkgsCross.iphone64.haskell.packages.jq
    #+END_SRC
 
 Notice that the pkgsCross attribute is just sugar to a more powerful &
@@ -181,7 +181,8 @@ will usually happen just because the software author has not thought
 of how to handle cross compilation[fn:8]. We want to work with
 software authors to make this process easier & contribute to the
 portability of free software. This takes time but we are definitely
-making progress.
+making progress. Contributions are always encouraged to [[https://github.com/nixos/nixpkgs/][the Nixpkgs
+repo]].
 
 * Further reading
 
