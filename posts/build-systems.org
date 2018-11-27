@@ -1,0 +1,101 @@
+#+title: Subjective ranking of build systems
+#+author: Matthew Bauer <mjbauer95@gmail.com>
+#+date: <2018-11-26 Mon>
+
+* My subjective ranking of build systems
+
+   Very few of us are happy with our choices of build systems. There
+   are a lot out there and none feel quite right to many people. I
+   wanted to offer my personal opinions on build systems. Every build
+   system is “bad” in its own way. But some are much worse than
+   others.
+
+   As a maintainer for Nixpkgs, we have to deal with . I’ve avoided
+   build systems that are language-specific. Those build systems are
+   usually the only choice for your language, so ranking them will
+   inevitably include opinions on the language itself. So, I’ve
+   included in this list only language neutral build systems. In
+   addition, I’ve filtered out any build systems that are not included
+   in Nixpkgs. This perspective is going to prioritize features that
+   make your project easiest to package in cross-platform ways. It’s
+   very subjective, so I only speak for myself here.
+
+   I separate two kinds of software used for packages. One is the
+   “meta” build system that provides an abstract interface to create
+   build rules. The other is the build runner that will run the rules.
+   Most meta build systems support targeting multiple backends.
+
+** What makes a good build system?
+
+   Some criteria I have for these build systems.
+
+   - Good defaults builtin. By default, packages should support
+     specifying “prefix” and “destination directory”.
+   - Works with widely available software. Being able to generate
+     Makefiles is a big bonus. Everyone has access to make - not
+     everyone has Ninja. This is often needed for bootstrapping.
+   - Supports cross compilation concepts. A good separation between
+     buildtime and runtime is a must have! In addition you should be
+     able to set build, host, and target from the command line. This
+     makes things much easier for packaging and bootstrapping.
+   - Detection of dependencies reuses existing solutions. Pkgconfig
+     provides an easy way to detect absolute directories. No need to
+     reinvent the wheel here.
+   - The less dependencies the better! Requiring a Java or Python
+     runtime means it takes longer to rebuild the world. They
+     introduce bottlenecks where every package needs to wait for these
+     runtimes to be built before we can start running things in
+     parallel.
+
+** Ranking of meta build systems from bad to worse
+
+    1. GNU Autotools (Automake & autoconf)
+    2. Meson
+    3. CMake
+    4. gyp
+    5. qmake
+    6. imake
+    7. premake
+
+    GNU Autotools comes in at the top. It has the best support for
+    cross compilation of any meta build system. It has been around for
+    a while and means that the classic “./configure && make && make
+    install” work. Because the configure script is just a simple bash
+    script, packages don’t have to depend directly on GNU Autotools at
+    build time. This is a big plus in bootstrapping software. I think
+    Meson has made a lot of progress in improving its cross
+    compilation support. It’s not quite there in my opinion, as it
+    requires you to create cross tool files instead of using command
+    line arguments.
+
+** Ranking of build runners from bad to worse
+
+    1. GNU Make
+    2. Ninja
+    3. Bazel
+    4. boost.build
+    5. SCons
+
+    GNU Make is still the top choice in my personal opinion. It has
+    been around for a while, but Makefiles are widely understood and
+    GNU Make is included everywhere. In addition, the Makefile build
+    rule format is easy to parallelize. Ninja still requires Python to
+    build itself. This adds to the Nixpkgs bottleneck because Python
+    is not included in the bootstrap tools. While there are some
+    speedups in Ninja, they don’t appear to be significant enough to
+    be worth switching at this time. At the same time, Ninja is still
+    a perfectly good choice if you value performance over legacy
+    support.
+
+** Conclusion
+
+   In Nixpkgs, we have made an attempt to support whatever build
+   system you are using. But, some are definitely better than others.
+
+   My main goal here is to try to get software authors to think more
+   critically about what build system they are using. In my opinion,
+   it is better to use well known software over more obscure systems.
+   These shouldn’t be taken as a universal truth. Everyone has their
+   own wants and needs. But, if your build system comes in at the
+   bottom of this list, you might want to consider switching to
+   something else!
