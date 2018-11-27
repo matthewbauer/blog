@@ -19,9 +19,9 @@ themselves.
 
 * Unstable channel
 
-/If you do not have Nix installed, you can install it available at
+If you do not have Nix installed, you can install it available at
 [[https://nixos.org/nix/][NixOS.org]]. The rest of the guide will assume that Nix is already
-installed./
+installed.
 
 Much work has gone into bringing cross compilation support to Nixpkgs.
 While Nixpkgs has had some support for cross compiling for awhile,
