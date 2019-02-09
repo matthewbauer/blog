@@ -1,4 +1,4 @@
-#+TITLE: Call for proofreaders and beta testers for 18.09
+#+TITLE: Call for proofreaders and beta testers for 19.03
 #+AUTHOR: Matthew Bauer
 #+EMAIL: mjbauer95@gmail.com
 #+DATE: <2019-02-08 Fri>
