@@ -1,0 +1,89 @@
+#+TITLE: Call for proofreaders and beta testers for 18.09
+#+AUTHOR: Matthew Bauer
+#+EMAIL: mjbauer95@gmail.com
+#+DATE: <2019-02-08 Fri>
+
+This was originally published on [[https://discourse.nixos.org/t/call-for-proofreaders-and-beta-testers-for-19-03/][Discourse]]. I am putting it here for
+posterity reasons.
+
+We get lots of contributors in Nixpkgs and NixOS who modify our source
+code. They are the most common type of contribution we receive. But,
+there is actually a great need for other types of contributions that
+don't involve programming at all! For the benefit of new users, I am
+going to outline how you can easily contribute to the community and
+help make 19.03 the best NixOS release yet.
+
+** Proofreading
+
+We have two different manuals in the NixOS/nixpkgs repo. One is for
+Nixpkgs, the set of all software. And the other is for NixOS, our
+Linux distro. Proofreading these manuals is important in helping new
+users learn about how our software works.
+
+- [[https://hydra.nixos.org/job/nixos/trunk-combined/nixos.manual.x86_64-linux/latest/download-by-type/doc/manual][NixOS unstable manual]]
+- [[https://hydra.nixos.org/job/nixpkgs/trunk/manual/latest/download-by-type/doc/manual][Nixpkgs unstable manual]]
+
+When you find an issue, you can do one of two things. The first and
+most encouraged is to open a PR on GitHub fixing the documentation.
+Both manuals are written in docbook. You can see the source for each
+here:
+
+- [[https://github.com/NixOS/nixpkgs/tree/master/nixos/doc/manual][NixOS manual source code]]
+- [[https://github.com/NixOS/nixpkgs/tree/master/doc][Nixpkgs manual source code]]
+
+GitHub allows you to edit these files directly on the web. You can
+also always use your own Git client. For reference on writing in
+DocBook, I recommend reading through [[https://docbook.rocks][docbook.rocks]].
+
+An alternative if you are unable to fix the documentation yourself is
+to open an issue. We use the same issue tracker includes any issues
+with Nixpkgs/NixOS and can be accessed through
+[[https://github.com/NixOS/nixpkgs/issues][GitHub Issues]]. Please be
+sure to provide a link to where in the manual the issue is as well as
+what is incorrect or otherwise confusing.
+
+** Beta testing
+
+An alternative to proofreading is beta testing. There are a number of
+ways to do this, but I would suggest using VirtualBox. Some
+information on installing VirtualBox can be found online, but you
+should just need to set these NixOS options:
+
+#+BEGIN_SRC nix
+virtualisation.virtualbox.host.enable = true;
+#+END_SRC
+
+and add your user to the vboxusers group:
+
+#+BEGIN_SRC nix
+users.users.<user>.extraGroups = [ "vboxusers" ];
+#+END_SRC
+
+then rebuild your NixOS machine (=sudo nixos-rebuild switch=), and run
+this command to start virtualbox:
+
+#+BEGIN_SRC sh
+VirtualBox
+#+END_SRC
+
+Other distros have their own ways of installing VirtualBox, see
+[[https://www.virtualbox.org/wiki/Downloads][Download VirtualBox]] for more info.
+
+You can download an unstable NixOS .ova file directly here.
+(**WARNING**: this will be a large file, a little below 1GB).
+
+- [[https://hydra.nixos.org/job/nixos/trunk-combined/nixos.ova.x86_64-linux/latest/download-by-type/file/ova][nixos-19.03pre-x86_64-linux.ova]]
+
+Once downloaded, you can import this .ova file directly into
+VirtualBox using "File" -> "Import Appliance...". Select the .ova file
+downloaded from above and click through a series of Next dialogs,
+using the provided defaults. After this, you can boot your NixOS
+machine by selecting it from the list on the left and clicking
+"Start".
+
+The next step is to just play around with the NixOS machine and try to
+break it! You can report any issues you find on [[https://github.com/NixOS/nixpkgs/issues][the GitHub Issues
+tracker]]. We use the same issue tracker for both NixOS and Nixpkgs.
+Just try to make your issues as easy to reproduce as possible. Be
+specific on where the problem is and how someone else could recreate
+the problem for themselves.
