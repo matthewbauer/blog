@@ -162,9 +162,9 @@ otherwise Nix will be confused on how to handle the missing
 
 This is certainly a security vulnerability so you may want to build
 static Nix for youself from [[https://github.com/NixOS/nixpkgs/pull/56281][my pull request]]. Of course you can’t build
-static Nix without without Nix, so this would need to be done from a
-system that has Nix installed. You can build it yourself, provided you
-have git and nix installed, like this,
+static Nix without Nix, so this would need to be done from a system
+that has Nix installed. You can build it yourself, provided you have
+git and nix installed, like this,
 
 #+BEGIN_SRC sh
 $ git clone https://github.com/matthewbauer/nixpkgs.git
