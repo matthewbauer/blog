@@ -10,8 +10,9 @@ it installed. Without root priveleges, you cannot create the
 
 With static linking, and some new features added in Nix 2.0, you can
 fairly easily use the Nix package manager in these unpriveleged
-context[fn:1]. To make this even easier, I am publishing prebuilt
-=x86_64= binaries on my personal website.
+context[fn:1]. To make this even easier, I am publishing prebuilt a
+=x86_64= binary on my personal website. It will reside permanently at
+https://matthewbauer.us/nix.
 
 ** Trying it out
 
@@ -110,7 +111,7 @@ $ curl https://matthewbauer.us/nix | \
 $ curl https://matthewbauer.us/nix | \
   sh -s run --store $HOME/.cache/nix2/store -f channel:nixpkgs-unstable \
   bash youtube-dl mplayer -c sh -c \
-  'mplayer $(youtube-dl --no-check-certificate -g https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
+  'mplayer -vo caca $(youtube-dl --no-check-certificate -g https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
 #+END_SRC
 
 *** And more...
