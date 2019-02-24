@@ -10,7 +10,7 @@ With static linking, and some new features added in Nix 2.0, you can
 fairly easily use the Nix package manager in these unpriveleged
 context[fn:1]. To make this even easier, I am publishing prebuilt a
 =x86_64= binary on my personal website. It will reside permanently at
-https://matthewbauer.us/nix.
+https://matthewbauer.us/nix (5M download).
 
 * Trying it out
 
