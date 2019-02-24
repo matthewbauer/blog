@@ -117,6 +117,47 @@ $ curl https://matthewbauer.us/nix | \
 Lots more cool things are possible. Look through [[https://nixos.org/nixos/packages.html#][the packages provided
 by Nixpkgs]] if you need inspiration.
 
+* Avoid installing and extracting each time
+
+This method of using Nix has some upfront cost. This is because
+https://matthewbauer.us/nix must be downloaded each time and the
+embedded .tar.gz file extracted. If you want Nix to stay around
+permanently, you have to follow a few tricks. Total install size is
+about 11M. Using this method, you will reduce startup and keep Nix in
+your path at each login.
+
+I have two ways of doing this. One the “easy” way is just running
+this script.
+
+#+BEGIN_SRC sh
+$ curl https://matthewbauer.us/nix.sh | sh
+#+END_SRC
+
+The other is the "safe" way and involves running some commands in
+order. These are the same commands run by the script, but this lets
+you audit everything being done line by line.
+
+#+BEGIN_SRC sh
+$ t=$(mktemp -d)
+$ curl https://matthewbauer.us/nix > $t/nix.sh
+$ pushd $t
+$ sh nix.sh --extract
+$ popd
+$ mkdir -p $HOME/bin/ $HOME/share/nix/corepkgs/
+$ mv $t/dat/nix $HOME/bin/
+$ mv $t/dat/share/nix/corepkgs/* $HOME/share/nix/corepkgs/
+$ echo export 'PATH=$HOME/bin:$PATH' >> $HOME/.profile
+$ echo export 'NIX_DATA_DIR=$HOME/share' >> $HOME/.profile
+$ source $HOME/.profile
+$ rm -rf $t
+#+END_SRC
+
+You can now run the Nix commands above as you need to, and it will be
+available on each login. Remember to always add the arguments =-f
+channel:nixpkgs-unstable= and =--store $HOME/.cache/nix/store=,
+otherwise Nix will be confused on how to handle the missing
+=/nix/store= and other environment variables.
+
 * Build it yourself
 
 This is certainly a security vulnerability so you may want to build
