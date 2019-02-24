@@ -109,7 +109,7 @@ $ curl https://matthewbauer.us/nix | \
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
-  sh -s run --store $HOME/.cache/nix2/store -f channel:nixpkgs-unstable \
+  sh -s run --store $HOME/.cache/nix/store -f channel:nixpkgs-unstable \
   bash youtube-dl mplayer -c sh -c \
   'mplayer -vo caca $(youtube-dl --no-check-certificate -g https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
 #+END_SRC
