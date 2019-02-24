@@ -2,8 +2,6 @@
 #+AUTHOR: Matthew Bauer <mjbauer95@gmail.com>
 #+DATE: <2019-02-24 Sun>
 
-* Static Nix: a command-line swiss army knife
-
 Nix is an extremely useful package manager. But, not all systems have
 it installed. Without root priveleges, you cannot create the
 =/nix= directory required for it to work.
@@ -14,7 +12,7 @@ context[fn:1]. To make this even easier, I am publishing prebuilt a
 =x86_64= binary on my personal website. It will reside permanently at
 https://matthewbauer.us/nix.
 
-** Trying it out
+* Trying it out
 
 You can use it like this,
 
@@ -30,7 +28,7 @@ tools, games and demos that you can use through Nix, without
 installing anything! Everything is put into temporary
 directories[fn:2].
 
-*** Dev tools
+** Dev tools
 
 #+BEGIN_SRC sh
 $ nix=$(mktemp); \
@@ -40,7 +38,7 @@ $ nix=$(mktemp); \
   bashInteractive curl git htop imagemagick file findutils jq nix openssh pandoc
 #+END_SRC
 
-*** Emacs
+** Emacs
 
 #+BEGIN_SRC sh
 $ nix=$(mktemp); \
@@ -50,7 +48,7 @@ $ nix=$(mktemp); \
   emacs -c emacs
 #+END_SRC
 
-*** File manager
+** File manager
 
 #+BEGIN_SRC sh
 $ nix=$(mktemp); \
@@ -60,7 +58,7 @@ $ nix=$(mktemp); \
   ranger -c ranger
 #+END_SRC
 
-*** Fire
+** Fire
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
@@ -68,7 +66,7 @@ $ curl https://matthewbauer.us/nix | \
   aalib -c aafire
 #+END_SRC
 
-*** Fortune
+** Fortune
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
@@ -76,7 +74,7 @@ $ curl https://matthewbauer.us/nix | \
   bash cowsay fortune -c sh -c 'cowsay $(fortune)'
 #+END_SRC
 
-*** Nethack
+** Nethack
 
 #+BEGIN_SRC sh
 $ nix=$(mktemp); \
@@ -86,7 +84,7 @@ $ nix=$(mktemp); \
   nethack -c nethack
 #+END_SRC
 
-*** Weather
+** Weather
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
@@ -94,7 +92,7 @@ $ curl https://matthewbauer.us/nix | \
   bash curl cowsay -c sh -c 'cowsay $(curl wttr.in/?format=3)'
 #+END_SRC
 
-*** World map
+** World map
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
@@ -105,7 +103,7 @@ $ curl https://matthewbauer.us/nix | \
   && img2txt -W $(tput cols) -f utf8 $img'
 #+END_SRC
 
-*** Youtube
+** Youtube
 
 #+BEGIN_SRC sh
 $ curl https://matthewbauer.us/nix | \
@@ -114,12 +112,12 @@ $ curl https://matthewbauer.us/nix | \
   'mplayer -vo caca $(youtube-dl --no-check-certificate -g https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
 #+END_SRC
 
-*** And more...
+** And more...
 
 Lots more cool things are possible. Look through [[https://nixos.org/nixos/packages.html#][the packages provided
 by Nixpkgs]] if you need inspiration.
 
-** Build it yourself
+* Build it yourself
 
 This is certainly a security vulnerability so you may want to build
 static Nix for youself from [[https://github.com/NixOS/nixpkgs/pull/56281][my pull request]]. Of course you can’t build
@@ -143,7 +141,7 @@ $ ssh your-machine
 $ ./nix ...
 #+END_SRC
 
-** Footnotes
+* Footnotes
 
 [fn:1] Note that you will need to be able to set up a private
 namespace. This is enabled by default on Linux, but some distros have
