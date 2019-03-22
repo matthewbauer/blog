@@ -1,0 +1,44 @@
+#+TITLE: Cross Compilation Draft Blog
+#+AUTHOR: Matthew Bauer
+#+DATE: <2019-03-22 Fri>
+
+When cross compiling, there are three types of machines that need to
+be known. =--build= is the machine that will build everything.
+=--host= is the machine that will run what has been built. =--target=
+is the machine that the =--host= machine can build for. Some common
+cases are provided,
+
+| Native Compilation         | =--build= = =--host= = =--target= |
+| Cross Compilation          | =--build= ≠ =--host= = =--target= |
+| Compiler Cross Compilation | =--build= = =--host= ≠ =--target= |
+| Canadian Cross             | =--build= ≠ =--host= ≠ =--target= |
+
+Each dependency must know about BOTH which machine it is built on and
+which machine it is built for.
+
+|            | =--build=      | =--host=          | =--target=       |
+|------------+----------------+-------------------+------------------|
+| =--build=  | depsBuildBuild | nativeBuildInputs | depsBuildTarget  |
+| =--host=   |                | depsHostHost      | depsHostTarget   |
+| =--target= |                |                   | depsTargetTarget |
+
+#+BEGIN_SRC dot :file dot.png :exports results
+digraph {
+    rankdir = LR;
+    node [];
+    edge [];
+
+    build [label="--build"];
+    host [label="--host"];
+    target [label="--target"];
+    build -> build [label="depsBuildBuild"];
+    build -> host [label="nativeBuildInputs"];
+    build -> target [label="depsBuildTarget"];
+    host -> host [label="depsHostHost"];
+    host -> target [label="buildInputs"];
+    target -> target [label="depsTargetTarget"];
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:dot.png]]
