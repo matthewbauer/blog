@@ -1,0 +1,221 @@
+#+title: Nixpkgs macOS Stdenv Updates
+#+author: Matthew Bauer <mjbauer95@gmail.com>
+#+date: <2019-05-06 Mon>
+#+options: ^:nil
+
+Over the past couple of months, I have been working on updating the
+macOS stdenv in Nixpkgs. This has significant impact on users of
+Nix/Nixpkgs on macOS. So, I want to explain what’s being updated, what
+the benefits are, and how we can minimize breakages.
+
+* macOS/Darwin stdenv changes
+
+First, to summarize the changes that impact stdenv and the Darwin
+infrastructure. The PR is available at [[https://github.com/NixOS/nixpkgs/pull/56744][NixOS/nixpkgs PR #56744]]. This
+update has been in the works for the last few months, and is currently
+in the staging-next branch, waiting to be merged in [[https://github.com/NixOS/nixpkgs/pull/60491][NixOS/nixpkgs PR
+#60491]]. It should land on master and nixpkgs-unstable in the next few
+days. The main highlights are —
+
+- Change default LLVM toolchain from 5 to 7. LLVM 5 stdenv is still
+  available through =llvmPackages_5.stdenv= attribute path.
+- Upgrade Apple SDK from 10.10 to 10.12.
+- Update libSystem symbols from 10.10 (XNU 3789.1.32) to 10.12 (XNU
+  3789.1.32).
+- Removed old patches to support old stdenv in Qt 5 and elsewhere.
+
+These macOS SDK upgrades are equivalent to setting
+=-mmacosx-version-min= to 10.12 in XCode. As a result, we will break
+compatibility with macOS before 10.12.
+
+* Why do we need to set a minimum macOS version?
+
+Without knowing internals of Nixpkgs, it might not be clear why we
+need to set a minimum macOS version. For instance with Linux, we are
+able to support any Linux kernel in Nixpkgs without any problem. The
+answer to this requires some understanding of how the kernel and
+userspace function.
+
+Nixpkgs is able to support multiple Linux kernels because we can use
+multiple Libc’s at one time. For any executable, a Nix closure will
+include both its own Libc and the dynamic linker in its closure. This
+works in Linux where multiple Libc’s can be used, but not on macOS
+where only one Libc is available.
+
+In short, Linux and macOS deal with compatibility between built
+binaries in different ways. They represent two opposite ends in how
+Unix-like kernels maintain compatibility with their userspace binaries.
+
+** Linux syscall compatibility
+
+The kernel is responsible for managing core operating system functions
+such as start-up, memory management, device abstractions, and process
+isolation. For it to function, the kernel needs to interact with the
+rest of the operating system which is collectively referred to as
+“userspace”. Executables in userspace use “syscalls” to tell the
+kernel what to do. These syscalls are very low-level and usually not
+called directly by a process. Instead, an abstraction layer is
+provided by the standard C library, or Libc.
+
+Linux is unique among operating systems due to the fact that the
+Kernel and Libc are developed independently. Linux is maintained by
+creator Linus Torvalds and a community of contributors. Glibc, the
+most popular Libc for Linux, is maintained by the GNU project. As a
+result, Linux has a strong separation between Syscalls and Libc.
+
+Linux does not tie itself to any specific Libc. Even though Glibc is
+used in almost all distros, many alternatives are available. For
+instance, Musl provides a more lightweight version of Glibc, while
+Bionic is the Libc used in the Android operating system. In addition,
+multiple versions of each of these Libc’s can be used on any one
+kernel, even at the same time. This can become very common when using
+multiple Nixpkgs versions at one time.
+
+To accomplish this, Linux provides a stable list of syscalls that it
+has maintained across many versions. This is specified for i386 at
+[[https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl][arch/x86/entry/syscalls/syscall_32.tbl]] in the kernel tree. The
+syscalls specified here are the interface through which the Libc
+communicates with the kernel. As a result, applications built in 1992
+can run on a modern kernel, provided it comes with copies of all its
+libraries[fn:6].
+
+** macOS Libc compatibility
+
+The macOS Libc is called libSystem. It is available on all macOS
+systems at =/usr/lib/libSystem.B.dylib=. This library is the main
+interface that binary compatibility is maintained in macOS. Unlike
+Linux, macOS maintains a stable interface in libSystem that all
+executables are expected to link to. This interface is guaranteed by
+Apple to be stable between versions.
+
+In Nixpkgs, we maintain this compatibility through a list of symbols
+that are exported by libSystem. This is a simple text list and is
+available for viewing at
+[[https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/darwin/apple-source-releases/Libsystem/system_c_symbols][NixOS/nixpkgs/pkgs/os-specific/darwin/apple-source-releases/Libsystem/system_c_symbols]].
+The symbol list is created by listing symbols (=nm=) on the minimum
+macOS version that we support (for my PR, 10.12). We do some linking
+tricks to ensure that everything that we build in Nixpkgs only
+contains those symbols. This means that we can reproducibly build on
+newer versions of macOS, while maintaining compatibility with older
+macOS versions. Unfortunately, newer symbols introduced in later
+versions cannot be used even on systems that have those symbols.
+
+A side effect of macOS design, is that fully static executables are
+not supported in macOS as they are on Linux. Without a stable syscall
+interface, there is nothing to provide compatibility between versions.
+As a result, Apple does not support this type of linking[fn:5].
+
+There is no mandated reason why we need to use libSystem directly. In
+fact, some languages like Go have attempted to instead use the syscall
+interface directly. There is no reason why this couldn’t work,
+however, upgrades between versions will almost certainly break
+binaries. Go eventually [[https://github.com/golang/go/issues/17490][abandoned this scheme in time for Go 1.12]]
+(proposed by Nixpkgs macOS contributor copumpkin!)
+
+** Others
+
+Some other examples may be useful. They mostly fall on one side or the
+other of the Syscall / Libc divide —
+
+- FreeBSD - breaks syscall compatibility between major releases,
+  should use Libc for longterm binary compatibility.
+- OpenBSD - similarly, changes syscall interface, perhaps even more
+  often than FreeBSD[fn:3].
+- NetBSD - apparently has maintained syscall compatibility
+  since 1992. [fn:4]
+- Windows, Solaris, Fuchsia - I cannot find any information on these
+  and how they handle binary compatibility.
+
+** LLVM triple
+
+As a side note, this difference can be clearly seen in how we specify
+target systems. The LLVM triple is a 3 or 4-part string specifying
+what we want to build for. The parts of the triple correspond to:
+
+#+BEGIN_SRC text
+<cpu>-<vendor>-<kernel>-<abi>
+#+END_SRC
+
+- =<cpu>= — the CPU architecture that we are building for. Examples
+  include =x86_64=, =aarch64=, =armv7l=, etc.
+- =<vendor>= — an arbitrary string specifying the vendor for the
+  toolchain. In Nixpkgs, this should always be =unknown=.
+- =<kernel>= — the kernel to build for (=linux=).
+- =<abi>= — the kernel ABI to use. On Linux, this corresponds to the
+  Libc we are using (=gnu= for Glibc, =musl= for Musl, =android= for
+  Bionic).
+
+When building for Linux, we can build for any version of Linux at one
+time. No version information is required. In addition, we must specify
+what “ABI” we want to use. In Nix, this is not very important because
+the Libc is provided by the closure. In fact, Nix has its own version
+of the LLVM triple called a Nix system tuple that omits the =<abi>=
+portion altogether! It corresponds to =<cpu>-<kernel>= from the LLVM
+triple.
+
+In comparison, when building for BSDs, we must specify which
+version of the kernel we are building for. In addition, we leave off
+the =<abi>= portion, because there is only one Libc available for
+these platforms. They are even included in the same tree as the
+kernel. Examples of BSD triples include,
+
+- =aarch64-apple-darwin16.0.0=
+- =x86_64-unknown-freebsd12.0=
+- =i386-unknown-openbsd5.8=
+- =armv7l-unknown-netbsd7.99=
+
+* Compatibility table
+
+Looking through the old versions, I’ve compiled a list of what I think
+are the corresponding macOS versions for each Nixpkgs release. As you
+can see, we try to support at least 3 previous macOS releases. This
+also happens to be about what Apple supports through security
+updates[fn:2].
+
+| Nixpkgs release | macOS version                    |
+|-----------------+----------------------------------|
+|           19.09 | 10.12, 10.13, 10.14, 10.15?      |
+|           19.03 | 10.11[fn:1], 10.12, 10.13, 10.14 |
+|           18.09 | 10.11, 10.12, 10.13, 10.14       |
+|           18.03 | 10.11, 10.12, 10.13, 10.14       |
+|           17.09 | 10.10, 10.11, 10.12, 10.13       |
+|           17.03 | 10.10, 10.11, 10.12              |
+|           16.09 | 10.10, 10.11, 10.12              |
+|           16.03 | 10.9?, 10.10, 10.11, 10.12       |
+
+We know that some users are stuck on older versions of macOS due to
+reasons outside of their control. As a result, we will try to support
+the 19.03 branch for a little bit longer than is usually done. If your
+organization uses 10.11, it might be a good idea to update to a newer
+version along with your update to Nixpkgs 19.09.
+
+* Conclusion
+
+My main goal has been to show better how Nixpkgs and macOS system
+interact. I got a little bit sidetracked exploring differences in
+binary compatibility between different operating systems. But, this
+should help users to better understand the differences in how macOS
+and Linux works in relation to Nixpkgs.
+
+* Footnotes
+
+[fn:1] There is an issue with building on 10.11 with the new
+swift-corelibs derivation. As a result, you need to use prebuilt
+version to avoid this issue.
+
+[fn:2] macOS updates come out about every year and Apple offers about
+3 months support. More information is available at
+https://apple.stackexchange.com/questions/47664/what-is-apples-policy-for-supporting-security-updates-on-older-versions-of-os-x.
+
+[fn:3] According to the_why_of_y on Hacker News,
+https://news.ycombinator.com/item?id=14011662
+
+[fn:4] Some more details on NetBSD’s ABI are available at
+http://www.jp.netbsd.org/gallery/presentations/joerg/asiabsdcon2016/asiabsdcon2016.pdf
+
+[fn:5] StackOverflow question at
+https://stackoverflow.com/questions/844819/how-to-static-link-on-os-x.
+
+[fn:6] It would be interesting to test this in practice. Finding a
+Libc that would work might be the hardest part. Even better if we
+could use Nix’s closures!
