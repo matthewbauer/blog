@@ -1,0 +1,45 @@
+#+TITLE: How to bisect issues in NixOS and Nixpkgs
+#+AUTHOR: Matthew Bauer <mjbauer95@gmail.com>
+#+DATE: <2019-05-14 Tue>
+
+When running updates on any system, it’s fairly common for issues to
+arise. It’s inevitable that any changes to your system are going to
+break things. But, with NixOS, we have two good features that help
+deal with these breakages:
+
+- Rollbacks. When you run =sudo nixos-rebuild switch --upgrade=, you
+  can rollback to the previous NixOS version with =sudo nixos-rebuild
+  switch --rollback=. This is nice if you quickly need to restore to
+  the last good version. But, make sure to always file an issue when
+  you have to do this, otherwise you could get stuck with out of date
+  sotware! The NixOS/Nixpkgs issue tracker is at
+  [[https://github.com/NixOS/nixpkgs/issues][https://github.com/NixOS/nixpkgs/issues]].
+
+- Reproducible failures. Nix provides fixed versions of all software
+  on the system. As a result, we can easily reproduce the failure
+  given a Git hash and the command that is failing
+
+In this post, I will focus on the second one. Specificially, I will
+show how you can combine =git bisect= with the =nix= command to easily
+track down which commit broke your system. I want to help users get
+better at tracking down what commit caused there issues. First, we
+need to go over how
+
+* Git bisect commands
+
+There are five commands you need to know to use =git bisect=.
+
+** =git bisect start=
+
+This tells Git to enter bisect mode.
+
+** =git bisect good=
+
+This tells Git t
+
+* Example
+
+To better understrand how Nix and Git work together, I have an active
+example. The issue is available at [[https://github.com/NixOS/nixpkgs/issues/61501]].
+
+
