@@ -5,7 +5,7 @@
 
 * Background
 
-In [[/channel-changing.html][Channel Changing with Nix]], I described how to move between channels
+In [[file:channel-changing.org][Channel Changing with Nix]], I described how to move between channels
 in Nix expressions. This provides an easy way to work with multiple
 versions of Nixpkgs. I was reminded of this post after seeing [[https://news.ycombinator.com/item?id=20753066][a
 comment]] by jolmg on Hacker News. The comment suggested we should have
@@ -74,7 +74,7 @@ You can query what package versions are available through Nix’s
 =builtins.attrNames= function. For example,
 
 #+BEGIN_SRC shell
-$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).emacs)"
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).emacs)"
 [ "24.3" "24.4" "24.5" "25.3" "26.1" ]
 #+END_SRC
 
@@ -93,7 +93,7 @@ run Emacs 24.3 with a fairly short command:
 
 #+BEGIN_SRC shell
 $ LC_ALL=C nix run "(import (builtins.fetchurl
-"https://matthewbauer.us/generate-versions.nix") {}).emacs.\"24.3\"" -c emacs
+https://matthewbauer.us/generate-versions.nix) {}).emacs.\"24.3\"" -c emacs
 #+END_SRC
 
 =LC_ALL=C= is needed on Linux to avoid the old Glibc trying to load
@@ -109,8 +109,7 @@ working on macOS back then! macOS users can try Emacs 25.3. This looks
 very similar to the above:
 
 #+BEGIN_SRC shell
-$ nix run "(import (builtins.fetchurl
-"https://matthewbauer.us/generate-versions.nix") {}).emacs.\"25.3\"" -c emacs
+$ nix run "(import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).emacs.\"25.3\"" -c emacs
 #+END_SRC
 
 ** Firefox
@@ -119,7 +118,7 @@ Another example using Firefox is pretty neat. The code is very similar
 to Emacs:
 
 #+BEGIN_SRC shell
-$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).firefox)"
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).firefox)"
 [ "25.0.1" "34.0.5" "39.0.3" "45.0" "48.0.2" "51.0.1" "55.0.3" "59.0.2" "63.0.3" "66.0.3" "68.0.2" ]
 #+END_SRC
 
@@ -128,8 +127,7 @@ We get all 11 releases with unique Firefox versions this time.
 You can run Firefox 25.0.1 using this command:
 
 #+BEGIN_SRC shell
-$ LC_ALL=C nix run "(import (builtins.fetchurl
-"https://matthewbauer.us/generate-versions.nix") {}).firefox.\"25.0.1\"" -c firefox
+$ LC_ALL=C nix run "(import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).firefox.\"25.0.1\"" -c firefox
 #+END_SRC
 
 Amazing how notably Firefox has changed since then!
@@ -139,15 +137,14 @@ Amazing how notably Firefox has changed since then!
 Another example using Blender. The code is very similar to the two above:
 
 #+BEGIN_SRC shell
-$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).blender)"
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).blender)"
 [ "2.67" "2.70" "2.72b" "2.75a" "2.77a" "2.78c" "2.79" "2.79a" "2.79b" ]
 #+END_SRC
 
 You can run Blender 2.67 using this command:
 
 #+BEGIN_SRC shell
-$ LC_ALL=C nix run "(import (builtins.fetchurl
-"https://matthewbauer.us/generate-versions.nix") {}).blender.\"26.7\"" -c blender
+$ LC_ALL=C nix run "(import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).blender.\"26.7\"" -c blender
 #+END_SRC
 
 * Rationale
