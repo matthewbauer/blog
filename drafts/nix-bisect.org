@@ -45,19 +45,11 @@ between commits.
 
 There are five commands you need to know to use =git bisect=.
 
-** =git bisect start=
+** =git bisect start <good> <bad>=
 
-This tells Git to enter bisect mode.
-
-** =git bisect good=
-
-This tells Git t
+This tells Git to enter bisect mode. It expects two arguments
 
 * Example
-
-To better understrand how Nix and Git work together, I have an active
-example. The issue is available at [[https://github.com/NixOS/nixpkgs/issues/61501]].
-
 
 ** Finding last good commit
 
@@ -103,8 +95,7 @@ git bisect start
 git bisect bad 190727db4ea
 git bisect good acbdaa5
 git bisect run sh -c '
-  touch a.s
-  nix run -f. llvmPackages_8.clang-unwrapped -c clang -cc1as -triple x86_64-unknown-linux-gnu a.s
+  ...
 '
 #+END_SRC
 
