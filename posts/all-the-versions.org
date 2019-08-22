@@ -1,0 +1,180 @@
+#+TITLE: All the versions with Nix
+#+AUTHOR: Matthew Bauer
+#+EMAIL: mjbauer95@gmail.com
+#+DATE: <2019-08-21 Wed>
+
+* Background
+
+In [[/channel-changing.html][Channel Changing with Nix]], I described how to move between channels
+in Nix expressions. This provides an easy way to work with multiple
+versions of Nixpkgs. I was reminded of this post after seeing [[https://news.ycombinator.com/item?id=20753066][a
+comment]] by jolmg on Hacker News. The comment suggested we should have
+a way to use multiple versions of packages seamlessly together. It
+suggested that we should use commits to differentiate versions, but I
+suggested that stable /channels/ would work much better.
+
+So, as a follow up to my Channel Changing post, I want to show how you
+can use a quick Nix mockup to accomplish this. Like the previous post,
+it will come with a Nix snippet that 
+
+* Code
+
+So, what follows is some code that I wrote up that lets you find
+package versions in an easier way. It is also available for download
+at [[https://matthewbauer.us/generate-versions.nix][https://matthewbauer.us/generate-versions.nix]].
+
+#+BEGIN_SRC nix :tangle generate-versions.nix
+{ channels ? [ "19.03" "18.09" "18.03" "17.09" "17.03"
+               "16.09" "16.03" "15.09" "14.12" "14.04" "13.10" ]
+, attrs ? builtins.attrNames (import <nixpkgs> {})
+, system ? builtins.currentSystem
+, args ? { inherit system; }
+}: let
+
+  getSet = channel:
+    (import (builtins.fetchTarball "channel:nixos-${channel}") args).pkgs;
+
+  getPkg = name: channel: let
+    pkgs = getSet channel;
+    pkg = pkgs.${name};
+    version = (builtins.parseDrvName pkg.name).version;
+  in if builtins.hasAttr name pkgs && pkg ? name then {
+    name = version;
+    value = pkg;
+  } else null;
+
+in builtins.listToAttrs (map (name: {
+  inherit name;
+  value = builtins.listToAttrs
+    (builtins.filter (x: x != null)
+      (map (getPkg name) channels));
+}) attrs)
+#+END_SRC
+
+This Nix expression generates an index of each package from all 11
+releases of Nixpkgs that have occurred since October 2010. For every
+package, each version that came with a release is included and put
+into a map. The map uses the version as a key and the package as its
+value, preferring the newer release when versions conflict.
+
+This is all done lazily, because that’s how Nix works. Still, it will
+take a little while at first to evaluate because we need to parse all
+11 releases! Remarkably, this expression uses only Nix builtins, and
+requires no special library function.
+
+* Usage
+
+Working with this Nix expression is extremely interesting, and I’ve
+included some examples of how to work with it. They should all be
+usable on a Linux machine (or maybe macOS) with [[https://nixos.org/nix/][Nix installed]].
+
+** Query package versions
+
+You can query what package versions are available through Nix’s
+=builtins.attrNames= function. For example,
+
+#+BEGIN_SRC shell
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).emacs)"
+[ "24.3" "24.4" "24.5" "25.3" "26.1" ]
+#+END_SRC
+
+This shows us that there are 5 versions of Emacs. This is kind of
+interesting because it means that there were at least 6 duplicate
+versions of Emacs between our release channels. Unfortunately, a few
+versions of Emacs are notably missing including Emacs 25.1 and Emacs
+25.2. Emacs 24.2 was released almost a year before the first stable
+Nixpkgs release! As time goes on, we should collect more of these
+releases.
+
+** Running an old version
+
+A shown above, there are 5 versions of Emacs available to us. We can
+run Emacs 24.3 with a fairly short command:
+
+#+BEGIN_SRC shell
+$ LC_ALL=C nix run "(import (builtins.fetchurl
+"https://matthewbauer.us/generate-versions.nix") {}).emacs.\"24.3\"" -c emacs
+#+END_SRC
+
+=LC_ALL=C= is needed on Linux to avoid the old Glibc trying to load
+the newer, incompatible locales that may be included with your system.
+This is an unfortunate problem with Glibc including breaking changes
+between releases. It also makes me want use to switch to Musl some
+time soon! I’ve also noticed some incompatibilities with GTK icons
+that appear to come from the gdk-pixbuf module. More investigation is
+needed on why this is the case.
+
+This will not work on macOS because we did not have Emacs
+working on macOS back then! macOS users can try Emacs 25.3. This looks
+very similar to the above:
+
+#+BEGIN_SRC shell
+$ nix run "(import (builtins.fetchurl
+"https://matthewbauer.us/generate-versions.nix") {}).emacs.\"25.3\"" -c emacs
+#+END_SRC
+
+** Firefox
+
+Another example using Firefox is pretty neat. The code is very similar
+to Emacs:
+
+#+BEGIN_SRC shell
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).firefox)"
+[ "25.0.1" "34.0.5" "39.0.3" "45.0" "48.0.2" "51.0.1" "55.0.3" "59.0.2" "63.0.3" "66.0.3" "68.0.2" ]
+#+END_SRC
+
+We get all 11 releases with unique Firefox versions this time. 
+
+You can run Firefox 25.0.1 using this command:
+
+#+BEGIN_SRC shell
+$ LC_ALL=C nix run "(import (builtins.fetchurl
+"https://matthewbauer.us/generate-versions.nix") {}).firefox.\"25.0.1\"" -c firefox
+#+END_SRC
+
+Amazing how notably Firefox has changed since then!
+
+** Blender
+
+Another example using Blender. The code is very similar to the two above:
+
+#+BEGIN_SRC shell
+$ nix eval "(builtins.attrNames (import (builtins.fetchurl "https://matthewbauer.us/generate-versions.nix") {}).blender)"
+[ "2.67" "2.70" "2.72b" "2.75a" "2.77a" "2.78c" "2.79" "2.79a" "2.79b" ]
+#+END_SRC
+
+You can run Blender 2.67 using this command:
+
+#+BEGIN_SRC shell
+$ LC_ALL=C nix run "(import (builtins.fetchurl
+"https://matthewbauer.us/generate-versions.nix") {}).blender.\"26.7\"" -c blender
+#+END_SRC
+
+* Rationale
+
+The reason that channels work better than commits is because every
+commit in Nixpkgs is not guaranteed to work on its own. Some may be
+missing security patches, configuration changes, or worse may just not
+work with other versions of packages. In addition, there are just too
+many commits to work with effectively. On the other hand, Nixpkgs
+release stable channels every 6 months, and we have a long vetting
+process of ensuring the stabilized channel works well.
+
+The main drawback the 6-month channels have is that we don’t have
+every version released of package. If the version you want is missing
+in a release, you are out of luck. But, the 6-month window tends to
+pick up a lot of packages and we end up with almost every major
+version of popular software. My philosophy is not all releases are
+worth keeping. Some contain critical security flaws, contain major
+bugs, and might not work well with other software. The 6-month window
+is good enough for me. Perhaps in the future we can increase Nixpkgs
+release cadence to 3-month or 1-month, but the maintainers are not
+quite ready for that yet.
+
+* Conclusion
+
+This has hopefully shown how Nix’s functional dependency model makes
+it very easy to switch between versions of packages. This is builtin
+to Nix, but you need some scripts to really use this well. Our 6-month
+release window is an arbitrary choice, but tends to pick up a lot of
+useful versions in the mean time.
