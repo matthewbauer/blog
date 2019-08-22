@@ -1,0 +1,43 @@
+#+TITLE: The 3rd Way of Dependency Management
+#+AUTHOR: Matthew Bauer <mjbauer95@gmail.com>
+#+DATE: <2019-05-28 Tue>
+
+btilly on Hacker News had [[https://news.ycombinator.com/item?id=20032255][an insightful observation]] on how projects
+deal with dependencies. There are two very different approaches to
+dependency management.
+
+#+BEGIN_QUOTE
+The first version is to lock down every dependency as tightly as you
+can to avoid accidentally breaking something. Which inevitably leads
+down the road to everything being locked to something archaic that
+can't be upgraded easily, and is incompatible with everything else.
+But with no idea what will break, or how to upgrade. I currently work
+at a company that went down that path and is now suffering for it.
+#+END_QUOTE
+
+This first version is commonly done through lock files which pin to
+specific versions or hashes. But, there is no clear idea how to
+incorporate dependencies updates.
+
++BEGIN_QUOTE
+The second version is upgrade early, upgrade often. This will
+occasionally lead to problems, but they tend to be temporary and
+easily fixed. And in the long run, your system will age better. Google
+is an excellent example of a company that does this.
+#+END_QUOTE
+
+This second version is a more forward thinking approach. The goal is
+to follow the latest available version. Obviously, you cannot always
+be perfectly up-to-date, but if you try your best you can get pretty
+close. This is very similar to Arch Linux’s rolling release model.
+
+But, there is a 3rd way that combines the advantages of both
+approaches. Instead of pinning to dependencies, you pin to an entire
+set of dependencies. This gives you . oYou are guaranteed stability and that
+dependencies work together while you are pinned to one set. Non
+breaking changes like security fixes can still happen but major
+updates don’t. This is less reproducible than locking everything, but
+we get to reuse fixes among projects and backport them to the shared
+set. Updating your dependencies is just moving to a new package set.
+This approach is utilized by NixOS and Stack, but AFAICT no where
+else.
