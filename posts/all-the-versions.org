@@ -92,8 +92,7 @@ A shown above, there are 5 versions of Emacs available to us. We can
 run Emacs 24.3 with a fairly short command:
 
 #+BEGIN_SRC shell
-$ LC_ALL=C nix run "(import (builtins.fetchurl
-https://matthewbauer.us/generate-versions.nix) {}).emacs.\"24.3\"" -c emacs
+$ LC_ALL=C nix run "(import (builtins.fetchurl https://matthewbauer.us/generate-versions.nix) {}).emacs.\"24.3\"" -c emacs
 #+END_SRC
 
 =LC_ALL=C= is needed on Linux to avoid the old Glibc trying to load
