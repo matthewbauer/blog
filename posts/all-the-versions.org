@@ -15,7 +15,7 @@ suggested that stable /channels/ would work much better.
 
 So, as a follow up to my Channel Changing post, I want to show how you
 can use a quick Nix mockup to accomplish this. Like the previous post,
-it will come with a Nix snippet that 
+it will come with a Nix snippet that you can try out yourself.
 
 * Code
 
