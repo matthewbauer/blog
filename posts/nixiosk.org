@@ -2,6 +2,7 @@
 #+SUBTITLE: Declarative Kiosk systems built with NixOS
 #+AUTHOR: Matthew Bauer <mjbauer95@gmail.com>
 #+DATE: <2020-03-23 Mon>
+#+OPTIONS: ^:nil
 
 Today I’m announcing a project I’ve been working on for the last few
 weeks. I’m calling it Nixiosk which is kind of a smashing together of
@@ -21,6 +22,8 @@ deployed through SSH and Nix remote builders.
 Right now, I have RetroArch (a frontend for a bunch of emulators) on
 my Raspberry Pi 4, and Epiphany (a web browser) on my Raspberry Pi 0.
 Both systems seem to be working pretty well.
+
+GitHub: https://github.com/matthewbauer/nixiosk
 
 * Deploying
 
