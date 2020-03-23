@@ -68,9 +68,9 @@ Here’s a basic idea of what each of these fields do:
   values currently are “raspberryPi0”, “raspberryPi1”, “raspberryPi2”,
   “raspberryPi3”, “raspberryPi4”.
 - authorizedKeys: A list of SSH public keys that are authorized to
-  make chages to your device. Note this is required because no
+  make changes to your device. Note this is required because no
   passwords will be set for this system.
-- program: What to do in the kiosk. This should be a Nixpkgs attr
+- program: What to do in the kiosk. This should be a Nixpkgs attribute
   (*package*), an *executable* in that package, and a list of *args*.
 - networks: This is a name/value pairing of SSIDs to PSK passphrases.
   This can be found with the wpa_passphrase(8) command from
@@ -176,12 +176,12 @@ setup remote builders. This is [[https://github.com/matthewbauer/nixiosk#remote-
 
 * Technology
 
-Here are some of pieces thta make the Kiosk system possible:
+Here are some of the pieces that make the Kiosk system possible:
 
 - [[https://www.hjdskes.nl/projects/cage/][Cage]] / [[https://wayland.freedesktop.org/][Wayland]]: Cage is a Wayland compositor that allows only one
   application to display at a time. This makes the system a true
   Kiosk.
-- [[https://nixos.org/][NixOS]] - A Linux distro built on top of functional package management
+- [[https://nixos.org/][NixOS]] - A Linux distro built on top of functional package management.
 - [[https://gitlab.com/obsidian.systems/basalt/][Basalt]]: A tool to manage NixOS directly from Git. This allows doing
   push-to-deploy directly to NixOS.
 - [[https://www.freedesktop.org/wiki/Software/Plymouth/][Plymouth]]: Nice graphical boot animations. Right now, it uses the
@@ -202,6 +202,6 @@ easier:
 * Project
 
 You can try it out right now if you have an Raspberry Pi system. Other
-hardaware is probably not too hard, but may require tweaking. The
+hardware is probably not too hard, but may require tweaking. The
 project page is available at https://github.com/matthewbauer/nixiosk
 and issues and pull requests are welcomed.
