@@ -27,6 +27,30 @@ GitHub: https://github.com/matthewbauer/nixiosk
 
 * Deploying
 
+** Install Nix
+
+If you haven’t already, you need to install Nix. This can be done
+through the installer:
+
+#+BEGIN_SRC sh
+$ bash <(curl -L https://nixos.org/nix/install)
+#+END_SRC
+
+** Cache
+
+To speed things up, you should setup a binary cache for nixiosk. This
+can be done easily through [[https://nixiosk.cachix.org/][Cachix]]. First, install Cachix:
+
+#+BEGIN_SRC sh
+$ nix-env -iA cachix -f https://cachix.org/api/v1/install
+#+END_SRC
+
+Then, use the nixiosk cache:
+
+#+BEGIN_SRC sh
+$ cachix use nixiosk
+#+END_SRC
+
 ** Configuration
 
 To make things simple, it just reads from an ad-hoc JSON file that
@@ -136,13 +160,9 @@ you can deploy to it with:
 $ ./deploy.sh /dev/mmcblk0
 #+END_SRC
 
-Note that this will take quite a while right now because I don’t have
-a binary cache setup. Stay tuned so that this part hopefully gets
-easier. It will also take a few minutes to write to your SD card.
-
 You can now eject your SD card and insert it into your Raspberry Pi.
 It will boot immediately to an Epiphany browser, loading
-en.wikipedia.org. This gives you a
+en.wikipedia.org.
 
 [[https://github.com/matthewbauer/nixiosk#troubleshooting][Troubleshooting steps]] can be found in the README.
 
