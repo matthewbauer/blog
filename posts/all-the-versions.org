@@ -88,7 +88,7 @@ releases.
 
 ** Running an old version
 
-A shown above, there are 5 versions of Emacs available to us. We can
+As shown above, there are 5 versions of Emacs available to us. We can
 run Emacs 24.3 with a fairly short command:
 
 #+BEGIN_SRC shell
